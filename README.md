@@ -1,2 +1,2 @@
 # Data-Analysis
-Udacity learning program
+Data Analysis learning program
