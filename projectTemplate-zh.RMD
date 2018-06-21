@@ -1,0 +1,359 @@
+---
+editor_options:
+  chunk_output_type: console
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+红葡萄酒的质量
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# 加载你最终使用的所有组件
+# 在这个代码块的分析中。
+
+# 注意，在这个代码块中，将参数 "echo" 设为假。
+# This prevents the code from displaying in the knitted HTML output.这可以避免代码混入 HTML 输出显示。
+# 应当在文件中，对所有代码块设为 echo=FALSE 。
+
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library("GGally")
+library(purrr)
+library(tidyr)
+```
+
+```{r echo=FALSE, Load_the_Data}
+# 加载数据
+df <- read.csv("wineQualityReds.csv")
+```
+
+# 单变量绘图选择
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+dim(df)
+
+str(df)
+
+summary(df)
+
+
+df$alcohol.cut <- df$alcohol %>%
+  cut(c(8, 11, 12, 15))
+df$volatile.acidity.cut <- df$volatile.acidity %>%
+  cut(c(0, 0.2, 0.7, 1.6))
+df <- transform(df,
+                prop.sulfur.dioxide = round((free.sulfur.dioxide / total.sulfur.dioxide), 2))
+
+df <- df[, !names(df) %in% c("X")]
+```  
+这份红酒的数据集有13个变量和接近1600的观测值
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+summary(df$fixed.acidity)
+
+ggplot(df, aes(fixed.acidity)) +
+  coord_cartesian(xlim = c(4, 16)) +
+  geom_histogram(binwidth = 0.5) +
+  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  labs(x = "fixed acidity (tartaric acid - g / dm^3)",
+       y = "Count",
+       title = "visualize the distribution of orignal fixed.acidity")
+```  
+
+固定酸度大多集中在7至9立方分米每克之间，平均值在8.32
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+summary(df$volatile.acidity)
+
+ggplot(df, aes(volatile.acidity)) +
+  coord_cartesian(xlim = c(0, 1.6)) +
+  geom_histogram() +
+  scale_x_continuous(breaks = seq(0, 1.6, 0.2)) +
+  labs(x = "volatile acidity (acetic acid - g / dm^3)",
+       y = "Count",
+       title = "visualize the distribution of orignal volatile.acidity")
+```  
+
+从红酒的挥发性酸度上来看，数据集中的挥发性酸度整体上还是不高的，如果挥发性酸度高恐怕红酒喝着就会有一股酸味了，数据主要集中在0.3到0.7之间，平均值为0.5278
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+summary(df$chlorides)
+
+ggplot(df, aes(chlorides)) +
+  coord_cartesian(xlim = c(0, 0.7)) +
+  geom_histogram() +
+  scale_x_continuous(breaks = seq(0, 0.7, 0.1)) +
+  labs(x = "chlorides (sodium chloride - g / dm^3)",
+       y = "Count",
+       title = "visualize the distribution of orignal chlorides")
+```  
+
+氯化钠的含量也是比较少的，因为氯化钠的含量少红酒喝着的口感越顺滑，反之会涩口
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+summary(df$prop.sulfur.dioxide)
+
+ggplot(df, aes(prop.sulfur.dioxide)) +
+  coord_cartesian(xlim = c(0, 1)) +
+  geom_histogram() +
+  scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+  labs(x = "proportion sulfur dioxide (%)",
+       y = "Count",
+       title = "visualize the distribution of orignal prop.sulfur.dioxide")
+```  
+
+二氧化硫的含量还是挺多的，原因：
+1.是为了杀菌 
+2.是为了抗氧化
+二氧化硫的主要集中在2%到5%中间，它的均值为3.8%
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+summary(df$density)
+
+ggplot(df, aes(density)) +
+  coord_cartesian(xlim = c(0.99, 1.01)) +
+  geom_histogram() +
+  scale_x_continuous(breaks = seq(0.99, 1.01, 0.01)) +
+  labs(x = "density (g / cm^3)",
+       y = "Count",
+       title = "visualize the distribution of orignal density")
+```   
+
+红酒的密度主要取决于酒精和糖的含量百分比，而它的密度刚好跟水很接近，水的密度是每立方厘米为1克，而红酒的密度大多接近
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+summary(df$pH)
+
+ggplot(df, aes(pH)) +
+  coord_cartesian(xlim = c(2.7, 4.02)) +
+  geom_histogram() +
+  scale_x_continuous(breaks = seq(2.7, 4.1, 0.5)) +
+  labs(x = "pH",
+       y = "Count",
+       title = "visualize the distribution of orignal pH")
+```  
+
+从红酒酸碱度上来看，数据集中的pH大多集中在3.3附近
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+summary(df$alcohol)
+
+ggplot(df, aes(alcohol)) +
+  coord_cartesian(xlim = c(8.4, 15)) +
+  geom_histogram() +
+  scale_x_continuous(breaks = seq(8.4, 15, 1)) +
+  labs(x = "alcohol (% by volume)",
+       y = "Count",
+       title = "visualize the distribution of orignal alcohol")
+```   
+
+从红酒乙醇含量上来看，大多数的红酒含量是高于9度的
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+summary(df$quality)
+
+ggplot(df, aes(quality)) +
+  coord_cartesian(xlim = c(3, 8)) +
+  geom_bar() +
+  scale_x_continuous(breaks = seq(3, 8, 1)) +
+  labs(x = "quality (score between 0 and 10)",
+       y = "Count",
+       title = "visualize the distribution of orignal quality")
+
+```  
+
+从红酒品质等级数量可以看出品质为5,6的红酒数量最多
+
+# 单变量分析 
+
+### 你的数据集结构是什么？  
+这份报告有13个变量，包含了1599瓶红酒的数据集  
+
+### 你的数据集内感兴趣的主要特性有哪些？  
+红酒的品质、挥发性酸度和乙醇  
+挥发性酸度：过高会导致酒发酸  
+
+### 你认为数据集内哪些其他特征可以帮助你探索兴趣特点？  
+氯化钠：影响着红酒口感的顺滑  
+二氧化硫：对红酒的杀菌和抗氧化起着作用  
+
+### 根据数据集内已有变量，你是否创建了任何新变量？  
+乙醇含量的分组变量：alcohol.cut, 分组等级{8, 11, 12, 15}  
+挥发性酸度的分组变量：volatile.acidity.cut, 分组等级{0, 0.5, 0.6, 1.6}  
+酸碱度的分组变量：pH.cut, 分组等级{2.7, 3.3, 3.4, 3.8}  
+挥发性二氧化硫的比率：prop.sulfur.dioxide  
+
+### 在已经探究的特性中，是否存在任何异常分布？你是否对数据进行一些操作，如清洁、调整或改变数据的形式？如果是，你为什么会这样做？  
+为了知道挥发性二氧化硫的比率，所以创建了变量prop.sulfur.dioxide,为了方便我保留了两位小数点  
+
+# 双变量绘图选择
+```{r echo=FALSE, fig.height=10, fig.width=10, warning=FALSE, message=FALSE}
+ggcorr(df,
+       method = c("all.obs", "spearman"),
+       nbreaks = 4, palette = "PuOr", label = TRUE, label_round = 3,
+       name = "spearman correlation coeff.(rho)",
+       hjust = 0.8, angle = -70, size=4) +
+  ggtitle("Spearman Correlation coefficient Matrix")
+```  
+
+通过图表的相关系数可以看出乙醇和红酒的品质关系最密切，相关系数为0.479然后就是挥发性酸度了有-0.381
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(df, aes(factor(quality), alcohol)) +
+  geom_jitter(alpha = 1/10) +
+  geom_boxplot(alpha = 1/10, color = "blue") +
+  stat_summary(fun.y = "mean", geom = "point", color = "red") +
+  labs(x = "Quality (score between 3 and 8)",
+       y = "alcohol (% by volume)",
+       title = "Boxplot of alcohol across qualities")
+with(df, cor.test(quality, alcohol))
+```  
+可以看出各品质红酒在乙醇含量上，红酒品质为5和6的含量最多；
+品质5的红酒主要集中在10度以下；
+品质6的红酒主要集中在10到11度之间。
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(df, aes(factor(quality), volatile.acidity)) +
+  geom_jitter(alpha = 1/10) +
+  geom_boxplot(alpha = 1/10, color = "blue") +
+  stat_summary(fun.y = "mean", geom = "point", color = "red") +
+  labs(x = "Quality (score between 3 and 8)",
+       y = "volatile acidity (acetic acid - g / dm^3)",
+       title = "Boxplot of volatile.acidity across qualities")
+with(df, cor.test(quality, volatile.acidity))
+```
+挥发性酸度过高会导致红酒变酸，可以看出高品质红酒的挥发性酸度很低；
+品质8的红酒的挥发性酸度主要集中在0.4左右；
+品质3的红酒主要集中在0.8以上。
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(df, aes(factor(quality), chlorides)) +
+  geom_jitter(alpha = 1/10) +
+  geom_boxplot(alpha = 1/10, color = "blue") +
+  stat_summary(fun.y = "mean", geom = "point", color = "red") +
+  labs(x = "Quality (score between 3 and 8)",
+       y = "chlorides (sodium chloride - g / dm^3)",
+       title = "Boxplot of chlorides across qualities")
+with(df, cor.test(quality, chlorides))
+```  
+氯化钠会影响红酒的口感，所以看出各种品质的红酒中的氯化钠含量都很少，但品质3的红酒中氯化钠是这几种品质红酒中均值是最高的。
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(df, aes(factor(quality), prop.sulfur.dioxide)) +
+  geom_jitter(alpha = 1/10) +
+  geom_boxplot(alpha = 1/10, color = "blue") +
+  stat_summary(fun.y = "mean", geom = "point", color = "red") +
+  labs(x = "Quality (score between 3 and 8)",
+       y = "proportion sulfur dioxide (%)",
+       title = "Boxplot of prop.sulfur.dioxide across qualities")
+with(df, cor.test(quality, prop.sulfur.dioxide))
+```  
+
+二氧化硫对红酒起着杀菌和抗氧化的作用，可以看出二氧化硫的比率是比较稳定的主要集中在0.38上下。
+
+# 双变量分析
+
+### 探讨你在这部分探究中观察到的一些关系。这些感兴趣的特性与数据集内其他特性有什么区别？
+主要感兴趣的挥发性酸度和乙醇跟红酒品质的相关性高，而数据集中其他特性都跟红酒品质相关性较低  
+
+### 你是否观察到主要特性与其他特性之间的有趣关系？
+红酒中的残糖跟挥发性酸度相关性最差，因为红酒又酸又甜显然并不合适  
+
+### 你发现最强的关系是什么？  
+红酒的品质跟乙醇的含量正相关性最强，而红酒品质跟挥发性酸度负相关性最强  
+
+# 多变量绘图选择
+
+```{r echo=FALSE}
+ggplot(df, aes(quality, volatile.acidity)) +
+  geom_line(aes(color=alcohol.cut),
+            stat = "summary",
+            fun.y = mean)
+```  
+
+通过观察红酒的品质、挥发性酸性和乙醇含量来看，随着红酒品质的提升红酒所含酸性也会下降，当然高含量的12-15度的红酒在红酒品质7时会有点提升但幅度并没有超过原始的数据
+
+```{r echo=FALSE}
+ggplot(df, aes(quality, chlorides)) +
+  geom_line(aes(color=alcohol.cut),
+            stat = "summary",
+            fun.y = mean)
+```  
+
+同样看红酒的品质、红酒氯化钠的含量和红酒乙醇的含量可以发现，随着红酒品质的提升红酒中氯化钠的含量也在不断减少，尤其是乙醇含量在8-11的这部分红酒区间当中  
+
+```{r echo=FALSE}
+ggplot(df, aes(quality, prop.sulfur.dioxide)) +
+  geom_line(aes(color=alcohol.cut),
+            stat = "summary",
+            fun.y = mean)
+```  
+
+再次观察红酒品质、红酒二氧化硫比率和乙醇含量可以发现，低度数的红酒中二氧化硫的含量很不稳定，尤其是高品质的红酒它的二氧化硫含量很少，而高乙醇含量的红酒它的二氧化硫的比率是相当稳定的，再说乙醇含量在11-12这中间区间的红酒它的二氧化硫的含量是最高的，二氧化硫的比率高了也不一定好，相对的稳定的二氧化硫含量比率组好
+
+
+# 多变量分析
+
+###  探讨你在这部分探究中观察到的一些关系。通过观察感兴趣的特性，是否存在相互促进的特性？
+红酒品质、乙醇和挥发性酸性很理想，因为如果高品质的红酒拥有含量过高的酸性那么红酒便不会有那么多的人去品尝了
+### 这些特性之间是否存在有趣或惊人的联系呢？
+和相关性一样挥发性酸性和氯化钠都是成负相关的，而这两种变量的含量越少对红酒的品质越好
+### 选项：你是否创建过数据集的任何模型？讨论你模型的优缺点。
+
+------
+
+# 定稿图与总结
+
+### 绘图一
+```{r echo=FALSE, Plot_One, warning=FALSE, message=FALSE}
+ggplot(df, aes(quality)) +
+  geom_bar() +
+  scale_x_continuous(breaks = seq(3, 8)) +
+  labs(x="quality(0-10)", y="Red Wine Count", title="The number of red wines of each quality")
+```
+
+### 描述一
+这份红酒的数据集中低端红酒和高端红酒的数量很少，而中端红酒很多说明消费中更倾向于中端的红酒
+
+### 绘图二
+```{r echo=FALSE, Plot_Two, warning=FALSE, message=FALSE}
+ggplot(df, aes(factor(quality), alcohol)) +
+  geom_jitter(alpha = 1/10) +
+  geom_boxplot(alpha = 1/10, color = "blue") +
+  stat_summary(fun.y = "mean", geom = "point", color = "red") +
+  labs(x = "Quality (score between 3 and 8)",
+       y = "alcohol (% by volume)",
+       title = "Boxplot of alcohol across qualities")
+```  
+
+### 描述二
+通过图表Boxplot of alcohol across qualities可以发现红酒品质最低的红酒在9%以下，而高品质的红酒在14%左右；
+品质5的红酒主要集中在10度以下；
+品质6的红酒主要集中在10到11度之间;
+但红酒品质在5,6的红酒是数据最多的。
+
+
+### 绘图三
+```{r echo=FALSE, Plot_Three}
+ggplot(df, aes(quality, chlorides)) +
+  geom_line(aes(color=alcohol.cut),
+            stat = "summary",
+            fun.y = mean) +
+  labs(x="quality(0-10)",
+       y="chlorides(g / dm^3)", 
+       title="Red wine sodium chloride content by alcohol.cut")
+```
+
+### 描述三
+通过观察图表看红酒的品质、红酒氯化钠的含量和红酒乙醇的含量可以发现，随着红酒品质的提升红酒中氯化钠的含量也在不断减少，尤其是乙醇含量在8-11的这部分红酒区间当中
+
+
+# 反思
+通过观察红酒数据集中这13个变量接近1600条红酒的观察值发现，跟红酒品质相关性最大的是红酒的乙醇含量和挥发性酸性；
+红酒的乙醇含量跟红酒质量的相关系数为正相关0.481，这在这些变量中这是相关性最大的特性了；
+然后就是挥发性酸度了它跟红酒品质的相关系数为-0.392，是负相关，这也是仅次于红酒乙醇含量的特性了，所以说红酒的品质相关性最大的特性可以说是乙醇含量和挥发性酸性了。
+数据集的红酒主要集中在品质5,6两种品质的红酒，而高端的红酒如品质8的红酒很少，可以看出中端红酒销量是比较多的，所以在以后的红酒销售中可以把红酒的销售工作集中在中端红酒。
